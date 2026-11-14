@@ -21,7 +21,7 @@ A tiny, colourful terminal playground for inventing imaginary three-layer snack 
 Install Cubes Archive from the [CubesEPA repository](https://github.com/CubeHub-studio/CubesEPA), then run this from the root of this repository:
 
 \`\`\`powershell
-cubes create . -o TRIAD.epa --name "TRIAD - Snack Stack Studio" --publisher "Cubes, Studio." --app-version 1.0.0 --description "A playful three-layer snack stack builder and randomizer."
+cubes create . -o ..\TRIAD.epa --name "TRIAD - Snack Stack Studio" --publisher "Cubes, Studio." --app-version 1.0.0 --description "A playful three-layer snack stack builder and randomizer."
 \`\`\`
 
 Verify and launch:
