@@ -6,11 +6,12 @@ A graphical three-layer snack-stack playground built with **Python + Tkinter**.
 
 - Build a stack by choosing its TOP, MIDDLE, and BASE layers.
 - Preview your stack in a custom-drawn visual stack illustration.
-- Pick from 15 ingredients, each with its own colour and flavour profile.
+- Pick from 82 Pringles-inspired flavours, each with its own colour and flavour profile.
 - Generate a surprise combination or restore the signature stack.
 - See a playful flavour/crunch score.
 - Save your creation as a plain-text recipe.
-- Browse the ingredient catalogue.
+- Search flavours instantly in both the stack builder and the scrollable catalogue.
+- Browse the full flavour catalogue, including regional, limited-edition, collaboration, and historical entries.
 
 ## Requirements
 
@@ -27,14 +28,16 @@ Install Cubes Archive from the [CubesEPA repository](https://github.com/CubeHub-
 
 ```powershell
 py -m py_compile main.py app.py
-cubes create . -o "$HOME\TRIAD.epa" --name "TRIAD - Snack Stack Studio" --publisher "Cubes, Studio." --app-version 2.0.0 --description "A graphical three-layer snack stack builder made with Tkinter."
+cubes create . -o "$HOME\TRIAD.epa" --name "TRIAD - Snack Stack Studio" --publisher "Cubes, Studio." --app-version 2.0.0 --description "A graphical three-layer snack stack builder made with Tkinter." --allowsuperfullscreen
 cubes verify "$HOME\TRIAD.epa"
 cubes run "$HOME\TRIAD.epa"
 ```
 
 ## Notes
 
-TRIAD runs locally. It does not need an account, network access, or extra packages. Its visual elements are drawn with Tkinter Canvas, so there are no external image assets to install.
+TRIAD runs locally. It does not need an account, network access, or extra packages. Press F11 to toggle fullscreen in EPA builds created with `--allowsuperfullscreen`.
+
+The flavour catalogue combines official Pringles product listings with regional and historical entries recorded by an unofficial fan archive. Availability varies by country and date; some entries are discontinued, limited-edition, or collaboration flavours. Its visual elements are drawn with Tkinter Canvas, so there are no external image assets to install.
 
 EPA files contain executable Python code and run with the permissions of the current user. Only run archives from sources you trust.
 
