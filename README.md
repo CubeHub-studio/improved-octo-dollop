@@ -28,7 +28,7 @@ Install Cubes Archive from the [CubesEPA repository](https://github.com/CubeHub-
 
 ```powershell
 py -m py_compile main.py app.py
-cubes create . -o "$HOME\TRIAD.epa" --name "TRIAD - Snack Stack Studio" --publisher "Cubes, Studio." --app-version 2.0.0 --description "A graphical three-layer snack stack builder made with Tkinter." --allowsuperfullscreen
+cubes create . -o "$HOME\TRIAD.epa" --name "TRIAD - Snack Stack Studio" --publisher "Cubes, Studio." --app-version 2.1.0 --description "A graphical three-layer snack stack builder made with Tkinter." --allowsuperfullscreen
 cubes verify "$HOME\TRIAD.epa"
 cubes run "$HOME\TRIAD.epa"
 ```
