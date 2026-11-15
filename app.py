@@ -6,7 +6,7 @@ from tkinter import filedialog, messagebox, ttk
 from pathlib import Path
 
 APP_NAME = "TRIAD"
-VERSION = "2.0.0"
+VERSION = "2.1.0"
 
 BG = "#10121b"
 PANEL = "#191d2b"
