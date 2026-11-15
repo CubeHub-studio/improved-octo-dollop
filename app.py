@@ -213,23 +213,29 @@ class TriadApp:
         tk.Label(detail, text=info["note"], bg=PANEL_2, fg=MUTED,
                  font=("Segoe UI", 9)).pack(anchor="w", padx=14, pady=(2, 12))
 
-        tk.Label(picker, text="INGREDIENTS", bg=PANEL, fg=MUTED,
-                 font=("Segoe UI", 8, "bold")).pack(anchor="w", padx=18, pady=(3, 7))
-        grid = tk.Frame(picker, bg=PANEL)
-        grid.pack(fill="both", expand=True, padx=14, pady=(0, 14))
-        for i, item in enumerate(INGREDIENTS):
-            row, col = divmod(i, 3)
-            selected = item["name"] == current
-            b = tk.Button(grid, text=f'{item["emoji"]}  {item["name"]}',
-                          command=lambda name=item["name"]: self.choose_ingredient(name),
-                          bg="#34304a" if selected else PANEL_2,
-                          fg=TEXT if selected else "#d5d7e4",
-                          activebackground="#34304a", activeforeground=TEXT,
-                          relief="flat", bd=0, padx=8, pady=9,
-                          font=("Segoe UI", 8, "bold"), cursor="hand2")
-            b.grid(row=row, column=col, sticky="ew", padx=4, pady=4)
-        for col in range(3):
-            grid.grid_columnconfigure(col, weight=1)
+        tk.Label(picker, text=f"INGREDIENTS  •  {len(INGREDIENTS)} FLAVOURS",
+                 bg=PANEL, fg=MUTED, font=("Segoe UI", 8, "bold")).pack(anchor="w", padx=18, pady=(3, 6))
+        search_box = tk.Frame(picker, bg=PANEL_2)
+        search_box.pack(fill="x", padx=14, pady=(0, 7))
+        tk.Label(search_box, text="⌕", bg=PANEL_2, fg=PURPLE,
+                 font=("Segoe UI", 13, "bold")).pack(side="left", padx=(9, 3))
+        self.studio_search = tk.Entry(search_box, bg=PANEL_2, fg=TEXT,
+                                      insertbackground=TEXT, relief="flat", bd=0,
+                                      font=("Segoe UI", 9))
+        self.studio_search.pack(side="left", fill="x", expand=True, padx=(2, 9), pady=9)
+        self.studio_search.bind("<KeyRelease>", self._filter_studio_list)
+        list_wrap = tk.Frame(picker, bg=PANEL)
+        list_wrap.pack(fill="both", expand=True, padx=14, pady=(0, 12))
+        self.studio_list = tk.Listbox(list_wrap, bg=PANEL_2, fg=TEXT,
+                                      selectbackground="#51436f", selectforeground=TEXT,
+                                      relief="flat", bd=0, highlightthickness=0,
+                                      font=("Segoe UI", 9), activestyle="none")
+        list_scroll = tk.Scrollbar(list_wrap, orient="vertical", command=self.studio_list.yview)
+        self.studio_list.configure(yscrollcommand=list_scroll.set)
+        self.studio_list.pack(side="left", fill="both", expand=True)
+        list_scroll.pack(side="right", fill="y")
+        self.studio_list.bind("<<ListboxSelect>>", self._choose_from_studio_list)
+        self._filter_studio_list()
 
         tk.Label(right, text="STACK PREVIEW", bg=PANEL, fg=PURPLE,
                  font=("Segoe UI", 9, "bold")).pack(anchor="w", padx=18, pady=(17, 4))
@@ -313,35 +319,100 @@ class TriadApp:
             Path(path).write_text(content, encoding="utf-8")
             messagebox.showinfo("Stack saved", "Your stack recipe has been saved.")
 
+    def _filter_studio_list(self, _event=None):
+        if not hasattr(self, "studio_list"):
+            return
+        query = self.studio_search.get().casefold()
+        self.studio_list.delete(0, "end")
+        self._studio_matches = [item for item in INGREDIENTS
+                                if query in item["name"].casefold()
+                                or query in item["taste"].casefold()]
+        for item in self._studio_matches:
+            self.studio_list.insert("end", item["name"])
+        current = self.stack[self.active_layer]
+        for index, item in enumerate(self._studio_matches):
+            if item["name"] == current:
+                self.studio_list.selection_set(index)
+                self.studio_list.see(index)
+                break
+
+    def _choose_from_studio_list(self, _event=None):
+        if not self.studio_list.curselection():
+            return
+        index = self.studio_list.curselection()[0]
+        if index < len(self._studio_matches):
+            self.choose_ingredient(self._studio_matches[index]["name"])
+
     def _render_catalogue(self):
-        tk.Label(self.content, text="The ingredient catalogue", bg=BG, fg=TEXT,
+        tk.Label(self.content, text="The flavour catalogue", bg=BG, fg=TEXT,
                  font=("Segoe UI", 20, "bold")).pack(anchor="w")
-        tk.Label(self.content, text="Fifteen flavours. Endless questionable combinations.",
-                 bg=BG, fg=MUTED, font=("Segoe UI", 10)).pack(anchor="w", pady=(3, 16))
-        outer = tk.Frame(self.content, bg=BG)
-        outer.pack(fill="both", expand=True)
-        for i, item in enumerate(INGREDIENTS):
+        tk.Label(self.content,
+                 text=f"{len(INGREDIENTS)} flavours • search by name, profile, or edition type",
+                 bg=BG, fg=MUTED, font=("Segoe UI", 10)).pack(anchor="w", pady=(3, 10))
+        search_box = tk.Frame(self.content, bg=PANEL_2)
+        search_box.pack(fill="x", pady=(0, 10))
+        tk.Label(search_box, text="⌕", bg=PANEL_2, fg=PURPLE,
+                 font=("Segoe UI", 15, "bold")).pack(side="left", padx=(12, 4))
+        self.catalogue_search = tk.Entry(search_box, bg=PANEL_2, fg=TEXT,
+                                         insertbackground=TEXT, relief="flat", bd=0,
+                                         font=("Segoe UI", 10))
+        self.catalogue_search.pack(side="left", fill="x", expand=True, padx=(2, 12), pady=11)
+        self.catalogue_search.bind("<KeyRelease>", self._filter_catalogue)
+
+        scroll_shell = tk.Frame(self.content, bg=BG)
+        scroll_shell.pack(fill="both", expand=True)
+        canvas = tk.Canvas(scroll_shell, bg=BG, highlightthickness=0, bd=0)
+        scrollbar = tk.Scrollbar(scroll_shell, orient="vertical", command=canvas.yview)
+        canvas.configure(yscrollcommand=scrollbar.set)
+        scrollbar.pack(side="right", fill="y")
+        canvas.pack(side="left", fill="both", expand=True)
+        self.catalogue_grid = tk.Frame(canvas, bg=BG)
+        window_id = canvas.create_window((0, 0), window=self.catalogue_grid, anchor="nw")
+        self.catalogue_grid.bind("<Configure>",
+                                 lambda _event: canvas.configure(scrollregion=canvas.bbox("all")))
+        canvas.bind("<Configure>",
+                    lambda event: canvas.itemconfigure(window_id, width=event.width))
+        self._populate_catalogue("")
+
+    def _filter_catalogue(self, _event=None):
+        self._populate_catalogue(self.catalogue_search.get())
+
+    def _populate_catalogue(self, query):
+        for child in self.catalogue_grid.winfo_children():
+            child.destroy()
+        query = query.casefold()
+        matches = [item for item in INGREDIENTS
+                   if query in item["name"].casefold()
+                   or query in item["taste"].casefold()
+                   or query in item["note"].casefold()]
+        if not matches:
+            tk.Label(self.catalogue_grid, text="No matching flavours found.",
+                     bg=BG, fg=MUTED, font=("Segoe UI", 10)).pack(anchor="w", padx=8, pady=18)
+            return
+        for i, item in enumerate(matches):
             row, col = divmod(i, 3)
-            card = tk.Frame(outer, bg=PANEL, highlightbackground=EDGE, highlightthickness=1)
+            card = tk.Frame(self.catalogue_grid, bg=PANEL,
+                            highlightbackground=EDGE, highlightthickness=1)
             card.grid(row=row, column=col, sticky="nsew", padx=5, pady=5)
-            icon = tk.Canvas(card, width=42, height=42, bg=PANEL, highlightthickness=0)
-            icon.pack(side="left", padx=(12, 5), pady=9)
-            icon.create_oval(3, 3, 39, 39, fill=item["color"], outline="")
-            icon.create_text(21, 21, text=item["emoji"], fill="#211d24",
-                             font=("Segoe UI", 13, "bold"))
+            icon = tk.Canvas(card, width=38, height=38, bg=PANEL, highlightthickness=0)
+            icon.pack(side="left", padx=(9, 4), pady=8)
+            icon.create_oval(3, 3, 35, 35, fill=item["color"], outline="")
+            icon.create_text(19, 19, text=item["emoji"], fill="#211d24",
+                             font=("Segoe UI", 12, "bold"))
             details = tk.Frame(card, bg=PANEL)
-            details.pack(side="left", fill="both", expand=True, pady=9)
+            details.pack(side="left", fill="both", expand=True, pady=8)
             tk.Label(details, text=item["name"], bg=PANEL, fg=TEXT,
-                     font=("Segoe UI", 9, "bold")).pack(anchor="w")
+                     font=("Segoe UI", 8, "bold"), wraplength=145,
+                     justify="left").pack(anchor="w")
             tk.Label(details, text=f'{item["taste"]}  •  Crunch {item["crunch"]}/5',
-                     bg=PANEL, fg=MUTED, font=("Segoe UI", 8)).pack(anchor="w")
+                     bg=PANEL, fg=MUTED, font=("Segoe UI", 7)).pack(anchor="w")
             tk.Label(details, text=item["note"], bg=PANEL, fg="#8d94aa",
-                     font=("Segoe UI", 8)).pack(anchor="w")
+                     font=("Segoe UI", 7), wraplength=145,
+                     justify="left").pack(anchor="w")
             self._button(card, "USE", lambda name=item["name"]: self.use_from_catalogue(name),
-                         color=item["color"]).pack(side="right", padx=10)
-            outer.grid_columnconfigure(col, weight=1, uniform="catalogue")
-        for row in range(5):
-            outer.grid_rowconfigure(row, weight=1)
+                         color=item["color"]).pack(side="right", padx=7)
+        for col in range(3):
+            self.catalogue_grid.grid_columnconfigure(col, weight=1)
 
     def use_from_catalogue(self, name: str):
         self.stack[self.active_layer] = name
